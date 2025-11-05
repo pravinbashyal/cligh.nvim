@@ -5,7 +5,7 @@ Thank you for your interest in contributing to cligh.nvim! This document provide
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/yourusername/cligh.nvim.git`
+2. Clone your fork: `git clone https://github.com/pravinbashyal/cligh.nvim.git`
 3. Create a new branch: `git checkout -b feature/your-feature-name`
 4. Make your changes
 5. Test your changes in Neovim

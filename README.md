@@ -32,7 +32,7 @@ A Neovim plugin for GitHub CLI (`gh`) with a beautiful floating window interface
 
 ```lua
 {
-  'yourusername/cligh.nvim',
+  'pravinbashyal/cligh.nvim',
   config = function()
     require('cligh').setup({
       -- Optional configuration
@@ -55,7 +55,7 @@ A Neovim plugin for GitHub CLI (`gh`) with a beautiful floating window interface
 
 ```lua
 use {
-  'yourusername/cligh.nvim',
+  'pravinbashyal/cligh.nvim',
   config = function()
     require('cligh').setup()
   end,
@@ -65,7 +65,7 @@ use {
 ### Using [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
-Plug 'yourusername/cligh.nvim'
+Plug 'pravinbashyal/cligh.nvim'
 
 lua << EOF
 require('cligh').setup()
@@ -206,5 +206,5 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/yourusername/cligh.nvim/issues).
+If you encounter any issues or have questions, please [open an issue](https://github.com/pravinbashyal/cligh.nvim/issues).
 

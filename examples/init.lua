@@ -2,7 +2,7 @@
 -- Place this in your Neovim config (e.g., ~/.config/nvim/lua/plugins/cligh.lua)
 
 return {
-  'yourusername/cligh.nvim',
+  'pravinbashyal/cligh.nvim',
   config = function()
     require('cligh').setup({
       -- UI appearance
