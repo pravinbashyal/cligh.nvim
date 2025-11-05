@@ -1,0 +1,161 @@
+*cligh.txt*  GitHub CLI integration for Neovim
+
+==============================================================================
+CONTENTS                                                      *cligh-contents*
+
+    1. Introduction ........................... |cligh-introduction|
+    2. Requirements ........................... |cligh-requirements|
+    3. Installation ........................... |cligh-installation|
+    4. Configuration .......................... |cligh-configuration|
+    5. Commands ............................... |cligh-commands|
+    6. Functions .............................. |cligh-functions|
+    7. License ................................ |cligh-license|
+
+==============================================================================
+INTRODUCTION                                              *cligh-introduction*
+
+cligh.nvim is a Neovim plugin that provides a beautiful interface for
+working with GitHub CLI (gh). It focuses on making pull request creation
+and management seamless with floating windows and intuitive keyboard
+navigation.
+
+==============================================================================
+REQUIREMENTS                                              *cligh-requirements*
+
+- Neovim >= 0.7.0
+- GitHub CLI (gh) installed and authenticated
+  - Install: https://cli.github.com/
+  - Authenticate: `gh auth login`
+
+==============================================================================
+INSTALLATION                                              *cligh-installation*
+
+Using lazy.nvim: >
+    {
+      'yourusername/cligh.nvim',
+      config = function()
+        require('cligh').setup()
+      end,
+    }
+<
+
+Using packer.nvim: >
+    use {
+      'yourusername/cligh.nvim',
+      config = function()
+        require('cligh').setup()
+      end,
+    }
+<
+
+==============================================================================
+CONFIGURATION                                            *cligh-configuration*
+
+Setup function: >
+    require('cligh').setup({
+      ui = {
+        border = 'rounded',  -- 'single', 'double', 'rounded', 'solid'
+        winblend = 0,        -- 0-100 transparency
+      },
+      pr = {
+        default_base = nil,  -- Default base branch
+      },
+      keymaps = {
+        -- Optional keybindings
+        { '<leader>gpc', ':ClighPRCreate<CR>', desc = 'Create PR' },
+      },
+    })
+<
+
+==============================================================================
+COMMANDS                                                      *cligh-commands*
+
+:ClighPRCreate                                               *:ClighPRCreate*
+    Open the PR creation form with a floating window interface.
+    
+    Form fields:
+    - Title: PR title (required)
+    - Description: PR description
+    - Status: Toggle between Draft and Ready for Review
+    
+    Keybindings in form:
+    - Tab/Shift-Tab: Navigate between fields
+    - Enter/i: Edit current field
+    - Space: Toggle Draft/Ready (on Status field)
+    - Ctrl-s: Submit PR
+    - Esc/q: Cancel
+
+:ClighPRList                                                   *:ClighPRList*
+    List all pull requests in the current repository in a floating window.
+    
+    Keybindings:
+    - Enter: View PR details
+    - q/Esc: Close
+
+:ClighPRView [number]                                          *:ClighPRView*
+    View details of a specific pull request. If no number is provided,
+    you will be prompted to enter one.
+    
+    Keybindings in view:
+    - q: Close
+
+:ClighPRStatus                                               *:ClighPRStatus*
+    Show PR status for current branch, PRs created by you, and PRs
+    requesting your review.
+
+:ClighPRChecks [number]                                     *:ClighPRChecks*
+    View CI checks and their status for a specific PR. If no number is
+    provided, you will be prompted to enter one.
+
+:ClighPRCheckout [number]                                 *:ClighPRCheckout*
+    Checkout a pull request locally. If no number is provided, you will
+    be prompted to enter one.
+
+==============================================================================
+FUNCTIONS                                                    *cligh-functions*
+
+require('cligh').setup({config})                              *cligh.setup()*
+    Setup the plugin with optional configuration.
+    
+    Parameters: ~
+        {config}  (table) Optional configuration table
+
+require('cligh.commands').create_pr()              *cligh.commands.create_pr*
+    Open the PR creation form.
+
+require('cligh.commands').list_prs({opts})          *cligh.commands.list_prs*
+    List pull requests.
+    
+    Parameters: ~
+        {opts}  (table) Optional configuration
+                - limit: number of PRs to fetch (default: 30)
+
+require('cligh.commands').view_pr({number})         *cligh.commands.view_pr*
+    View a specific PR.
+    
+    Parameters: ~
+        {number}  (number) PR number
+
+require('cligh.commands').pr_status()            *cligh.commands.pr_status*
+    Show PR status.
+
+require('cligh.commands').pr_checks({number})    *cligh.commands.pr_checks*
+    Show PR checks.
+    
+    Parameters: ~
+        {number}  (number) PR number
+
+require('cligh.commands').checkout_pr({number}) *cligh.commands.checkout_pr*
+    Checkout a PR locally.
+    
+    Parameters: ~
+        {number}  (number) PR number
+
+==============================================================================
+LICENSE                                                        *cligh-license*
+
+MIT License. See LICENSE file for details.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
+
