@@ -38,158 +38,251 @@ function M.create_float(opts)
   return buf, win
 end
 
--- Create PR form in a floating window
+-- Create PR form in a floating window with inline editing
 function M.create_pr_form(callback)
-  local width = math.floor(vim.o.columns * 0.6)
-  local height = math.floor(vim.o.lines * 0.7)
+  local width = math.floor(vim.o.columns * 0.75)
+  local height = math.floor(vim.o.lines * 0.75)
   
-  local buf, win = M.create_float({
+  -- Create main buffer for the form
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
+  vim.api.nvim_buf_set_option(buf, 'buftype', 'acwrite')
+  vim.api.nvim_buf_set_option(buf, 'filetype', 'markdown')
+  vim.api.nvim_buf_set_name(buf, 'PR-FORM')
+  
+  -- Calculate position to center the window
+  local col = math.floor((vim.o.columns - width) / 2)
+  local row = math.floor((vim.o.lines - height) / 2)
+  
+  -- Window options
+  local win_opts = {
+    relative = 'editor',
     width = width,
     height = height,
+    col = col,
+    row = row,
+    style = 'minimal',
     border = 'rounded',
-  })
+  }
+  
+  -- Create window
+  local win = vim.api.nvim_open_win(buf, true, win_opts)
+  vim.api.nvim_win_set_option(win, 'winblend', 0)
+  vim.api.nvim_win_set_option(win, 'cursorline', true)
   
   -- Form state
-  local form_data = {
-    title = "",
-    body = "",
+  local form_state = {
     draft = false,
+    buf = buf,
+    win = win,
   }
   
-  local current_field = 1
-  local fields = {
-    { name = "title", label = "PR Title", start_line = 3, height = 1 },
-    { name = "body", label = "PR Description", start_line = 6, height = height - 12 },
-    { name = "draft", label = "Status", start_line = height - 4, height = 1 },
+  -- Initial template
+  local template = {
+    "# Create Pull Request",
+    "",
+    "## Title",
+    "",
+    "<!-- Enter your PR title on the line below -->",
+    "",
+    "",
+    "## Description",
+    "",
+    "<!-- Enter your PR description below. Markdown is fully supported! -->",
+    "",
+    "",
+    "",
+    "## Settings",
+    "",
+    "Status: [ ] Draft  [x] Ready for Review",
+    "",
+    "---",
+    "",
+    "**Instructions:**",
+    "- Edit the title and description above using Vim commands",
+    "- Toggle Draft status: Press <Space> on the Status line",
+    "- Submit: <Ctrl-s> or :w",
+    "- Cancel: <Esc> or :q",
   }
   
-  -- Render the form
-  local function render()
-    local lines = {}
-    table.insert(lines, "┌─ Create Pull Request " .. string.rep("─", width - 25))
-    table.insert(lines, "")
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, template)
+  
+  -- Move cursor to title line
+  vim.api.nvim_win_set_cursor(win, {6, 0})
+  
+  -- Function to parse form data from buffer
+  local function parse_form_data()
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    local title_lines = {}
+    local desc_lines = {}
+    local in_title = false
+    local in_desc = false
+    local draft = false
     
-    -- Title field
-    table.insert(lines, "Title:")
-    table.insert(lines, form_data.title)
-    table.insert(lines, "")
-    
-    -- Body field
-    table.insert(lines, "Description:")
-    local body_lines = vim.split(form_data.body, "\n", { plain = true })
-    for _, line in ipairs(body_lines) do
-      table.insert(lines, line)
+    for i, line in ipairs(lines) do
+      if line:match("^## Title") then
+        in_title = true
+        in_desc = false
+      elseif line:match("^## Description") then
+        in_title = false
+        in_desc = true
+      elseif line:match("^## Settings") then
+        in_title = false
+        in_desc = false
+      elseif line:match("^Status:") then
+        draft = line:match("%[x%]%s*Draft")
+      elseif in_title and not line:match("^<!%-%-") and line ~= "" then
+        table.insert(title_lines, line)
+      elseif in_desc and not line:match("^<!%-%-") and line ~= "" then
+        table.insert(desc_lines, line)
+      end
     end
     
-    -- Pad to maintain consistent layout
-    while #lines < height - 6 do
-      table.insert(lines, "")
+    -- Clean up title (take first non-empty line)
+    local title = ""
+    for _, line in ipairs(title_lines) do
+      if line:match("%S") then
+        title = line
+        break
+      end
     end
     
-    -- Draft toggle
-    table.insert(lines, "")
-    local status_text = form_data.draft and "[x] Draft  [ ] Ready for Review" or "[ ] Draft  [x] Ready for Review"
-    table.insert(lines, "Status: " .. status_text)
-    table.insert(lines, "")
-    table.insert(lines, "[Tab] Next field  [Shift+Tab] Previous field  [Ctrl+s] Submit  [Esc] Cancel")
+    -- Clean up description (remove empty lines at start/end)
+    while #desc_lines > 0 and not desc_lines[1]:match("%S") do
+      table.remove(desc_lines, 1)
+    end
+    while #desc_lines > 0 and not desc_lines[#desc_lines]:match("%S") do
+      table.remove(desc_lines)
+    end
     
-    vim.api.nvim_buf_set_option(buf, 'modifiable', true)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-    vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+    local description = table.concat(desc_lines, "\n")
+    
+    return {
+      title = title,
+      body = description,
+      draft = draft or false,
+    }
+  end
+  
+  -- Toggle draft status
+  local function toggle_draft()
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    for i, line in ipairs(lines) do
+      if line:match("^Status:") then
+        local new_line
+        if line:match("%[x%]%s*Draft") then
+          -- Currently draft, switch to ready
+          new_line = "Status: [ ] Draft  [x] Ready for Review"
+          form_state.draft = false
+        else
+          -- Currently ready, switch to draft
+          new_line = "Status: [x] Draft  [ ] Ready for Review"
+          form_state.draft = true
+        end
+        vim.api.nvim_buf_set_lines(buf, i - 1, i, false, {new_line})
+        vim.notify(form_state.draft and "Set to Draft" or "Set to Ready for Review", vim.log.levels.INFO)
+        break
+      end
+    end
+  end
+  
+  -- Submit handler
+  local function submit()
+    local form_data = parse_form_data()
+    
+    if form_data.title == "" then
+      vim.notify("PR title is required!", vim.log.levels.ERROR)
+      return
+    end
+    
+    -- Close window
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+    
+    -- Call callback with form data
+    callback(form_data)
+  end
+  
+  -- Cancel handler
+  local function cancel()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+    vim.notify("PR creation cancelled", vim.log.levels.WARN)
   end
   
   -- Set up keymaps
-  local opts_map = { noremap = true, silent = true, buffer = buf }
+  local opts = { noremap = true, silent = true, buffer = buf }
   
-  -- Tab navigation
-  vim.keymap.set('n', '<Tab>', function()
-    current_field = current_field % #fields + 1
-    vim.api.nvim_win_set_cursor(win, {fields[current_field].start_line, 0})
-  end, opts_map)
+  -- Submit with Ctrl-s
+  vim.keymap.set('n', '<C-s>', submit, opts)
+  vim.keymap.set('i', '<C-s>', function()
+    vim.cmd('stopinsert')
+    submit()
+  end, opts)
   
-  vim.keymap.set('n', '<S-Tab>', function()
-    current_field = current_field - 1
-    if current_field < 1 then current_field = #fields end
-    vim.api.nvim_win_set_cursor(win, {fields[current_field].start_line, 0})
-  end, opts_map)
+  -- Cancel with Esc in normal mode
+  vim.keymap.set('n', '<Esc>', cancel, opts)
   
-  -- Edit fields
-  vim.keymap.set('n', 'i', function()
-    local field = fields[current_field]
-    if field.name == "title" then
-      vim.ui.input({ prompt = "PR Title: ", default = form_data.title }, function(input)
-        if input then
-          form_data.title = input
-          render()
-        end
-      end)
-    elseif field.name == "body" then
-      vim.ui.input({ prompt = "PR Description: ", default = form_data.body }, function(input)
-        if input then
-          form_data.body = input
-          render()
-        end
-      end)
-    elseif field.name == "draft" then
-      form_data.draft = not form_data.draft
-      render()
-    end
-  end, opts_map)
-  
-  vim.keymap.set('n', '<CR>', function()
-    local field = fields[current_field]
-    if field.name == "title" then
-      vim.ui.input({ prompt = "PR Title: ", default = form_data.title }, function(input)
-        if input then
-          form_data.title = input
-          render()
-        end
-      end)
-    elseif field.name == "body" then
-      vim.ui.input({ prompt = "PR Description: ", default = form_data.body }, function(input)
-        if input then
-          form_data.body = input
-          render()
-        end
-      end)
-    elseif field.name == "draft" then
-      form_data.draft = not form_data.draft
-      render()
-    end
-  end, opts_map)
-  
-  -- Toggle draft status with space
+  -- Toggle draft with Space (in normal mode)
   vim.keymap.set('n', '<Space>', function()
-    if fields[current_field].name == "draft" then
-      form_data.draft = not form_data.draft
-      render()
+    local cursor = vim.api.nvim_win_get_cursor(win)
+    local line = vim.api.nvim_buf_get_lines(buf, cursor[1] - 1, cursor[1], false)[1]
+    if line and line:match("^Status:") then
+      toggle_draft()
     end
-  end, opts_map)
+  end, opts)
   
-  -- Submit
-  vim.keymap.set('n', '<C-s>', function()
-    if form_data.title == "" then
-      vim.notify("PR title is required", vim.log.levels.ERROR)
-      return
-    end
-    vim.api.nvim_win_close(win, true)
-    callback(form_data)
-  end, opts_map)
+  -- Prevent actual write, use it as submit
+  vim.api.nvim_create_autocmd("BufWriteCmd", {
+    buffer = buf,
+    callback = submit,
+  })
   
-  -- Cancel
-  vim.keymap.set('n', '<Esc>', function()
-    vim.api.nvim_win_close(win, true)
-  end, opts_map)
+  -- Handle quit
+  vim.api.nvim_create_autocmd("QuitPre", {
+    buffer = buf,
+    callback = function()
+      if vim.api.nvim_win_is_valid(win) then
+        local form_data = parse_form_data()
+        if form_data.title ~= "" or form_data.body ~= "" then
+          vim.ui.select(
+            { "Save and create PR", "Discard changes" },
+            { prompt = "You have unsaved changes:" },
+            function(choice)
+              if choice == "Save and create PR" then
+                submit()
+              else
+                cancel()
+              end
+            end
+          )
+          return true -- Prevent default quit
+        end
+      end
+    end,
+  })
   
-  vim.keymap.set('n', 'q', function()
-    vim.api.nvim_win_close(win, true)
-  end, opts_map)
+  -- Add syntax highlighting for better UX
+  vim.api.nvim_buf_call(buf, function()
+    vim.cmd([[
+      syntax match ClighHeader "^##.*$"
+      syntax match ClighComment "^<!--.*-->$"
+      syntax match ClighStatus "^Status:.*$"
+      syntax match ClighInstructions "^\*\*Instructions:\*\*$"
+      syntax match ClighSeparator "^---$"
+      
+      highlight default link ClighHeader Title
+      highlight default link ClighComment Comment
+      highlight default link ClighStatus Special
+      highlight default link ClighInstructions Question
+      highlight default link ClighSeparator Comment
+    ]])
+  end)
   
-  -- Initial render
-  render()
-  
-  -- Set cursor to first field
-  vim.api.nvim_win_set_cursor(win, {fields[1].start_line, 0})
+  -- Enter insert mode automatically
+  vim.cmd('startinsert')
 end
 
 -- Display PR list in a floating window
@@ -345,4 +438,3 @@ function M.show_pr_checks(checks_text)
 end
 
 return M
-

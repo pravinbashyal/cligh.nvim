@@ -1,20 +1,22 @@
 # cligh.nvim
 
-A Neovim plugin for GitHub CLI (`gh`) with a beautiful floating window interface for creating and managing pull requests.
+A Neovim plugin for GitHub CLI (`gh`) with a beautiful inline editor for creating and managing pull requests. Edit PRs directly in Vim with full markdown support and native editing power.
 
 ## Features
 
-- 🚀 **Create Pull Requests** with an intuitive floating window form
-  - Enter PR title and description
+- 🚀 **Create Pull Requests** with a beautiful inline editor
+  - **Full Vim editing** - Edit title and description directly in a real Vim buffer
+  - **Markdown support** - Syntax highlighting for PR descriptions
+  - **Inline editing** - Use all Vim commands, motions, and keybindings
   - Toggle between Draft and Ready for Review
-  - Easy keyboard navigation
   - **Automatic branch preparation**: Handles uncommitted changes and pushes branches automatically
   
 - 📋 **List Pull Requests** in your repository
-- 👁️ **View PR Details** in a formatted buffer
+- 👁️ **View PR Details** in a formatted markdown buffer
 - ✅ **Check PR Status** and CI checks
 - 🔄 **Checkout PRs** locally with a single command
 - 🔧 **Smart Git Operations**: Automatically commits and pushes changes when needed
+- ✨ **Native Vim Experience**: No compromise on editing power
 
 ## Prerequisites
 
@@ -76,6 +78,44 @@ EOF
 
 ## Usage
 
+### The PR Creation Experience
+
+When you run `:ClighPRCreate`, you get a beautiful floating window with a markdown-formatted template:
+
+```markdown
+# Create Pull Request
+
+## Title
+
+<!-- Enter your PR title on the line below -->
+
+
+## Description
+
+<!-- Enter your PR description below. Markdown is fully supported! -->
+
+
+
+## Settings
+
+Status: [ ] Draft  [x] Ready for Review
+
+---
+
+**Instructions:**
+- Edit the title and description above using Vim commands
+- Toggle Draft status: Press <Space> on the Status line
+- Submit: <Ctrl-s> or :w
+- Cancel: <Esc> or :q
+```
+
+You can:
+- Use **any Vim command** to edit (`hjkl`, `dd`, `yy`, `p`, etc.)
+- Write **markdown** with syntax highlighting
+- Use **visual mode**, **macros**, and all Vim features
+- **Navigate naturally** with Vim motions
+- **Save with `:w`** or `Ctrl+s` to create the PR
+
 ### Commands
 
 | Command | Description |
@@ -93,25 +133,27 @@ EOF
 2. The plugin will automatically check:
    - **Uncommitted changes**: If found, you'll be prompted to commit them
    - **Unpushed branch**: If the branch isn't pushed to remote, you'll be prompted to push it
-3. A floating window will appear with a form
-4. Press `Enter` or `i` on each field to edit:
-   - **Title**: Enter your PR title
-   - **Description**: Enter your PR description
-   - **Status**: Press `Space` to toggle between Draft and Ready for Review
-5. Navigate fields with `Tab` / `Shift+Tab`
-6. Press `Ctrl+s` to submit the PR
-7. Press `Esc` or `q` to cancel
+3. A beautiful floating window opens with an **inline editable buffer**
+4. Edit the PR directly in Vim with full editing capabilities:
+   - **Title**: Edit in the Title section using all Vim commands
+   - **Description**: Write markdown with full syntax highlighting
+   - **Status**: Navigate to the Status line and press `Space` to toggle Draft/Ready
+5. Use all your favorite Vim motions, commands, and keybindings
+6. Press `Ctrl+s` or `:w` to submit the PR
+7. Press `Esc` (in normal mode) or `:q` to cancel
 
 **Smart Branch Management**: The plugin automatically handles uncommitted changes and ensures your branch is pushed to remote before creating the PR, eliminating the common "branch not pushed" error.
 
+**Inline Editing**: Unlike traditional forms, the PR editor is a real Vim buffer with markdown support. Use `dd`, `yy`, `p`, visual mode, macros, and any Vim feature you love!
+
 ### Keyboard Shortcuts in PR Form
 
-- `Tab` - Move to next field
-- `Shift+Tab` - Move to previous field
-- `Enter` or `i` - Edit current field
-- `Space` - Toggle Draft/Ready (when on Status field)
-- `Ctrl+s` - Submit PR
-- `Esc` or `q` - Cancel
+- **All Vim commands** - Full Vim editing support (hjkl, w, b, dd, yy, p, etc.)
+- `i/a/o/O` - Enter insert mode (standard Vim)
+- `Space` - Toggle Draft/Ready (when cursor is on Status line)
+- `Ctrl+s` or `:w` - Submit PR
+- `Esc` - Return to normal mode / Cancel (in normal mode)
+- `:q` - Quit/Cancel
 
 ### Viewing PRs
 
