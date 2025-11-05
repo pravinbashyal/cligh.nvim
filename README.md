@@ -8,11 +8,13 @@ A Neovim plugin for GitHub CLI (`gh`) with a beautiful floating window interface
   - Enter PR title and description
   - Toggle between Draft and Ready for Review
   - Easy keyboard navigation
+  - **Automatic branch preparation**: Handles uncommitted changes and pushes branches automatically
   
 - 📋 **List Pull Requests** in your repository
 - 👁️ **View PR Details** in a formatted buffer
 - ✅ **Check PR Status** and CI checks
 - 🔄 **Checkout PRs** locally with a single command
+- 🔧 **Smart Git Operations**: Automatically commits and pushes changes when needed
 
 ## Prerequisites
 
@@ -88,14 +90,19 @@ EOF
 ### Creating a Pull Request
 
 1. Run `:ClighPRCreate`
-2. A floating window will appear with a form
-3. Press `Enter` or `i` on each field to edit:
+2. The plugin will automatically check:
+   - **Uncommitted changes**: If found, you'll be prompted to commit them
+   - **Unpushed branch**: If the branch isn't pushed to remote, you'll be prompted to push it
+3. A floating window will appear with a form
+4. Press `Enter` or `i` on each field to edit:
    - **Title**: Enter your PR title
    - **Description**: Enter your PR description
    - **Status**: Press `Space` to toggle between Draft and Ready for Review
-4. Navigate fields with `Tab` / `Shift+Tab`
-5. Press `Ctrl+s` to submit the PR
-6. Press `Esc` or `q` to cancel
+5. Navigate fields with `Tab` / `Shift+Tab`
+6. Press `Ctrl+s` to submit the PR
+7. Press `Esc` or `q` to cancel
+
+**Smart Branch Management**: The plugin automatically handles uncommitted changes and ensures your branch is pushed to remote before creating the PR, eliminating the common "branch not pushed" error.
 
 ### Keyboard Shortcuts in PR Form
 

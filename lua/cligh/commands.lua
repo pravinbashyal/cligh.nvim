@@ -24,6 +24,91 @@ local function validate()
   return true
 end
 
+-- Prepare branch for PR (commit and push)
+local function prepare_branch_for_pr(callback)
+  local current_branch = gh.get_current_branch()
+  
+  -- Check for uncommitted changes
+  if gh.has_uncommitted_changes() then
+    local count = gh.get_uncommitted_changes_count()
+    local message = string.format("You have %d uncommitted change%s. Commit them before creating PR?", 
+                                  count, count > 1 and "s" or "")
+    
+    vim.ui.select(
+      { "Yes, commit all changes", "No, create PR without committing", "Cancel" },
+      { prompt = message },
+      function(choice)
+        if not choice or choice == "Cancel" then
+          vim.notify("PR creation cancelled", vim.log.levels.WARN)
+          return
+        end
+        
+        if choice == "Yes, commit all changes" then
+          vim.ui.input({ prompt = "Commit message: ", default = "chore: prepare for PR" }, function(commit_msg)
+            if not commit_msg or commit_msg == "" then
+              vim.notify("Commit cancelled - no message provided", vim.log.levels.WARN)
+              return
+            end
+            
+            vim.notify("Committing changes...", vim.log.levels.INFO)
+            local success, result = gh.commit_all_changes(commit_msg)
+            
+            if not success then
+              vim.notify("Failed to commit changes:\n" .. result, vim.log.levels.ERROR)
+              return
+            end
+            
+            vim.notify("Changes committed successfully", vim.log.levels.INFO)
+            
+            -- Now check if branch needs to be pushed
+            check_and_push_branch(callback)
+          end)
+        else
+          -- User chose to create PR without committing
+          check_and_push_branch(callback)
+        end
+      end
+    )
+  else
+    -- No uncommitted changes, just check if we need to push
+    check_and_push_branch(callback)
+  end
+end
+
+-- Check if branch is pushed and push if needed
+function check_and_push_branch(callback)
+  local current_branch = gh.get_current_branch()
+  
+  if not gh.has_remote_tracking() then
+    local message = string.format("Branch '%s' has not been pushed to remote. Push it now?", current_branch)
+    
+    vim.ui.select(
+      { "Yes, push branch", "Cancel" },
+      { prompt = message },
+      function(choice)
+        if not choice or choice == "Cancel" then
+          vim.notify("PR creation cancelled", vim.log.levels.WARN)
+          return
+        end
+        
+        vim.notify("Pushing branch to remote...", vim.log.levels.INFO)
+        local success, result = gh.push_current_branch()
+        
+        if not success then
+          vim.notify("Failed to push branch:\n" .. result, vim.log.levels.ERROR)
+          return
+        end
+        
+        vim.notify("Branch pushed successfully", vim.log.levels.INFO)
+        callback()
+      end
+    )
+  else
+    -- Branch is already pushed, proceed
+    callback()
+  end
+end
+
 -- Create a pull request
 function M.create_pr()
   if not validate() then
@@ -31,24 +116,28 @@ function M.create_pr()
   end
   
   local current_branch = gh.get_current_branch()
-  vim.notify("Creating PR from branch: " .. current_branch, vim.log.levels.INFO)
+  vim.notify("Preparing to create PR from branch: " .. current_branch, vim.log.levels.INFO)
   
-  ui.create_pr_form(function(form_data)
-    vim.notify("Creating pull request...", vim.log.levels.INFO)
-    
-    local opts = {
-      title = form_data.title,
-      body = form_data.body,
-      draft = form_data.draft,
-    }
-    
-    local success, result = gh.create_pr(opts)
-    
-    if success then
-      vim.notify("Pull request created successfully!\n" .. result, vim.log.levels.INFO)
-    else
-      vim.notify("Failed to create pull request:\n" .. result, vim.log.levels.ERROR)
-    end
+  -- Prepare branch (handle uncommitted changes and push)
+  prepare_branch_for_pr(function()
+    -- Show PR creation form
+    ui.create_pr_form(function(form_data)
+      vim.notify("Creating pull request...", vim.log.levels.INFO)
+      
+      local opts = {
+        title = form_data.title,
+        body = form_data.body,
+        draft = form_data.draft,
+      }
+      
+      local success, result = gh.create_pr(opts)
+      
+      if success then
+        vim.notify("Pull request created successfully!\n" .. result, vim.log.levels.INFO)
+      else
+        vim.notify("Failed to create pull request:\n" .. result, vim.log.levels.ERROR)
+      end
+    end)
   end)
 end
 

@@ -30,6 +30,60 @@ function M.get_current_branch()
   return vim.trim(result)
 end
 
+-- Check if there are uncommitted changes
+function M.has_uncommitted_changes()
+  local handle = io.popen("git status --porcelain 2>&1")
+  local result = handle:read("*a")
+  handle:close()
+  return result ~= ""
+end
+
+-- Get count of uncommitted changes
+function M.get_uncommitted_changes_count()
+  local handle = io.popen("git status --porcelain 2>&1")
+  local result = handle:read("*a")
+  handle:close()
+  local count = 0
+  for _ in result:gmatch("[^\r\n]+") do
+    count = count + 1
+  end
+  return count
+end
+
+-- Check if current branch has a remote tracking branch
+function M.has_remote_tracking()
+  local branch = M.get_current_branch()
+  local handle = io.popen(string.format("git rev-parse --abbrev-ref %s@{upstream} 2>&1", branch))
+  local result = handle:read("*a")
+  handle:close()
+  return not result:match("no upstream") and not result:match("fatal")
+end
+
+-- Push current branch to remote
+function M.push_current_branch()
+  local branch = M.get_current_branch()
+  local cmd = string.format("git push -u origin %s 2>&1", branch)
+  
+  local handle = io.popen(cmd)
+  local result = handle:read("*a")
+  handle:close()
+  
+  local success = not result:match("error:") and not result:match("fatal:")
+  return success, result
+end
+
+-- Commit all changes
+function M.commit_all_changes(message)
+  local cmd = string.format("git add -A && git commit -m %s 2>&1", vim.fn.shellescape(message))
+  
+  local handle = io.popen(cmd)
+  local result = handle:read("*a")
+  handle:close()
+  
+  local success = not result:match("error:") and not result:match("fatal:")
+  return success, result
+end
+
 -- Create a pull request
 function M.create_pr(opts)
   local cmd = {"gh", "pr", "create"}
