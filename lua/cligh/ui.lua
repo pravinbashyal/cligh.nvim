@@ -40,8 +40,9 @@ end
 
 -- Create PR form in a floating window with inline editing
 function M.create_pr_form(callback)
-  local width = math.floor(vim.o.columns * 0.75)
-  local height = math.floor(vim.o.lines * 0.75)
+  local config = require('cligh').config
+  local width = math.floor(vim.o.columns * (config.ui.width or 0.75))
+  local height = math.floor(vim.o.lines * (config.ui.height or 0.75))
   
   -- Create main buffer for the form
   local buf = vim.api.nvim_create_buf(false, true)
@@ -62,12 +63,12 @@ function M.create_pr_form(callback)
     col = col,
     row = row,
     style = 'minimal',
-    border = 'rounded',
+    border = config.ui.border or 'rounded',
   }
   
   -- Create window
   local win = vim.api.nvim_open_win(buf, true, win_opts)
-  vim.api.nvim_win_set_option(win, 'winblend', 0)
+  vim.api.nvim_win_set_option(win, 'winblend', config.ui.winblend or 0)
   vim.api.nvim_win_set_option(win, 'cursorline', true)
   
   -- Form state

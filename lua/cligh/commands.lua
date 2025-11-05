@@ -44,7 +44,9 @@ local function prepare_branch_for_pr(callback)
         end
         
         if choice == "Yes, commit all changes" then
-          vim.ui.input({ prompt = "Commit message: ", default = "chore: prepare for PR" }, function(commit_msg)
+          local config = require('cligh').config
+          local default_msg = config.git.commit_message_template or "chore: prepare for PR"
+          vim.ui.input({ prompt = "Commit message: ", default = default_msg }, function(commit_msg)
             if not commit_msg or commit_msg == "" then
               vim.notify("Commit cancelled - no message provided", vim.log.levels.WARN)
               return

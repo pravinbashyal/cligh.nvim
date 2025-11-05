@@ -7,13 +7,23 @@ return {
     require('cligh').setup({
       -- UI appearance
       ui = {
-        border = 'rounded',     -- Options: 'single', 'double', 'rounded', 'solid', 'shadow'
-        winblend = 0,           -- Window transparency (0-100)
+        border = 'rounded',      -- Options: 'single', 'double', 'rounded', 'solid', 'shadow'
+        winblend = 0,            -- Window transparency (0-100)
+        width = 0.75,            -- Window width (0.0-1.0, percentage of screen)
+        height = 0.75,           -- Window height (0.0-1.0, percentage of screen)
       },
       
-      -- Default PR settings
+      -- PR settings
       pr = {
-        default_base = nil,     -- Default base branch (nil uses repository default)
+        default_base = nil,      -- Default base branch (nil uses repository default)
+        auto_commit = true,      -- Prompt to commit uncommitted changes
+        auto_push = true,        -- Prompt to push unpushed branches
+        template = nil,          -- Path to custom PR template file
+      },
+      
+      -- Git settings
+      git = {
+        commit_message_template = "chore: prepare for PR", -- Default commit message
       },
       
       -- Optional keybindings

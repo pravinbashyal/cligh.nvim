@@ -71,19 +71,31 @@ Setup function: >
 COMMANDS                                                      *cligh-commands*
 
 :ClighPRCreate                                               *:ClighPRCreate*
-    Open the PR creation form with a floating window interface.
+    Open the PR creation editor with inline Vim editing support.
     
-    Form fields:
-    - Title: PR title (required)
-    - Description: PR description
-    - Status: Toggle between Draft and Ready for Review
+    The plugin will automatically:
+    - Check for uncommitted changes and prompt to commit them
+    - Check if the branch is pushed to remote and push if needed
+    - Open a beautiful markdown buffer for editing
     
-    Keybindings in form:
-    - Tab/Shift-Tab: Navigate between fields
-    - Enter/i: Edit current field
-    - Space: Toggle Draft/Ready (on Status field)
-    - Ctrl-s: Submit PR
-    - Esc/q: Cancel
+    The editor is a real Vim buffer with:
+    - Full Vim editing capabilities (motions, commands, visual mode)
+    - Markdown syntax highlighting
+    - Inline editing for title and description
+    - Draft/Ready status toggle
+    
+    Keybindings in editor:
+    - All Vim commands (hjkl, dd, yy, p, w, b, etc.)
+    - i/a/o/O: Enter insert mode (standard Vim)
+    - Space: Toggle Draft/Ready (when on Status line)
+    - Ctrl-s or :w: Submit PR
+    - Esc: Return to normal mode
+    - :q: Cancel/Quit
+    
+    Template structure:
+    - ## Title section: Enter PR title
+    - ## Description section: Write markdown description
+    - ## Settings section: Toggle draft status with Space
 
 :ClighPRList                                                   *:ClighPRList*
     List all pull requests in the current repository in a floating window.

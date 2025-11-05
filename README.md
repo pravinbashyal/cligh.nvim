@@ -2,6 +2,32 @@
 
 A Neovim plugin for GitHub CLI (`gh`) with a beautiful inline editor for creating and managing pull requests. Edit PRs directly in Vim with full markdown support and native editing power.
 
+## ✨ Demo
+
+<!-- TODO: Add screenshot/demo GIF here -->
+```
+┌─────────────────────────────────────────────────────────┐
+│ # Create Pull Request                                   │
+│                                                          │
+│ ## Title                                                 │
+│                                                          │
+│ feat: add new feature                                   │
+│                                                          │
+│ ## Description                                           │
+│                                                          │
+│ This PR adds a new feature that...                      │
+│ - Implements X                                           │
+│ - Fixes Y                                                │
+│                                                          │
+│ ## Settings                                              │
+│                                                          │
+│ Status: [ ] Draft  [x] Ready for Review                 │
+│                                                          │
+│ ─────────────────────────────────────────────────────── │
+│ <Ctrl-s> Submit | <Esc> Cancel | <Space> Toggle Draft   │
+└─────────────────────────────────────────────────────────┘
+```
+
 ## Features
 
 - 🚀 **Create Pull Requests** with a beautiful inline editor
@@ -183,24 +209,46 @@ vim.keymap.set('n', '<leader>gpl', ':ClighPRList<CR>', { desc = 'List PRs' })
 
 ## Configuration
 
+Full configuration with all available options:
+
 ```lua
 require('cligh').setup({
   -- UI appearance
   ui = {
-    border = 'rounded',     -- Window border style
-    winblend = 0,           -- Window transparency (0-100)
+    border = 'rounded',      -- 'single', 'double', 'rounded', 'solid', 'shadow'
+    winblend = 0,            -- Window transparency (0-100)
+    width = 0.75,            -- Window width as percentage of screen (0.0-1.0)
+    height = 0.75,           -- Window height as percentage of screen (0.0-1.0)
   },
   
-  -- Default PR settings
+  -- PR settings
   pr = {
-    default_base = nil,     -- Default base branch (nil = repo default)
+    default_base = nil,      -- Default base branch (nil = repository default)
+    auto_commit = true,      -- Prompt to commit uncommitted changes
+    auto_push = true,        -- Prompt to push unpushed branches
+    template = nil,          -- Path to custom PR template file
+  },
+  
+  -- Git settings
+  git = {
+    commit_message_template = "chore: prepare for PR", -- Default commit message
   },
   
   -- Optional keybindings
   keymaps = {
-    -- Add your preferred keybindings here
+    { '<leader>gpc', ':ClighPRCreate<CR>', desc = 'Create PR' },
+    { '<leader>gpl', ':ClighPRList<CR>', desc = 'List PRs' },
+    { '<leader>gps', ':ClighPRStatus<CR>', desc = 'PR Status' },
   },
 })
+```
+
+### Minimal Configuration
+
+If you're happy with the defaults, just call setup:
+
+```lua
+require('cligh').setup()
 ```
 
 ## Troubleshooting
