@@ -76,26 +76,25 @@ COMMANDS                                                      *cligh-commands*
     The plugin will automatically:
     - Check for uncommitted changes and prompt to commit them
     - Check if the branch is pushed to remote and push if needed
+    - Prompt for PR status (Draft or Ready for Review)
     - Open a beautiful markdown buffer for editing
     
     The editor is a real Vim buffer with:
     - Full Vim editing capabilities (motions, commands, visual mode)
     - Markdown syntax highlighting
     - Inline editing for title and description
-    - Draft/Ready status toggle
+    - Window title shows the selected status
     
     Keybindings in editor:
     - All Vim commands (hjkl, dd, yy, p, w, b, etc.)
     - i/a/o/O: Enter insert mode (standard Vim)
-    - Space: Toggle Draft/Ready (when on Status line)
+    - Esc: Return to normal mode (standard Vim behavior)
     - Ctrl-s or :w: Submit PR
-    - Esc: Return to normal mode
     - :q: Cancel/Quit
     
     Template structure:
     - ## Title section: Enter PR title
     - ## Description section: Write markdown description
-    - ## Settings section: Toggle draft status with Space
 
 :ClighPRList                                                   *:ClighPRList*
     List all pull requests in the current repository in a floating window.

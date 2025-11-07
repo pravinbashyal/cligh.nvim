@@ -6,8 +6,8 @@ A Neovim plugin for GitHub CLI (`gh`) with a beautiful inline editor for creatin
 
 <!-- TODO: Add screenshot/demo GIF here -->
 ```
-┌─────────────────────────────────────────────────────────┐
-│ # Create Pull Request                                   │
+┌─── ✅ Create Pull Request (Ready for Review) ───────────┐
+│ # Pull Request                                          │
 │                                                          │
 │ ## Title                                                 │
 │                                                          │
@@ -19,12 +19,8 @@ A Neovim plugin for GitHub CLI (`gh`) with a beautiful inline editor for creatin
 │ - Implements X                                           │
 │ - Fixes Y                                                │
 │                                                          │
-│ ## Settings                                              │
-│                                                          │
-│ Status: [ ] Draft  [x] Ready for Review                 │
-│                                                          │
 │ ─────────────────────────────────────────────────────── │
-│ <Ctrl-s> Submit | <Esc> Cancel | <Space> Toggle Draft   │
+│ <Ctrl-s> Submit | :q Cancel                             │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -106,14 +102,14 @@ EOF
 
 ### The PR Creation Experience
 
-When you run `:ClighPRCreate`, you get a beautiful floating window with a markdown-formatted template:
+When you run `:ClighPRCreate`, you first choose the status (Draft or Ready for Review), then you get a beautiful floating window with a markdown-formatted template:
 
 ```markdown
-# Create Pull Request
+# Pull Request
 
 ## Title
 
-<!-- Enter your PR title on the line below -->
+<!-- Enter your PR title below -->
 
 
 ## Description
@@ -122,17 +118,12 @@ When you run `:ClighPRCreate`, you get a beautiful floating window with a markdo
 
 
 
-## Settings
-
-Status: [ ] Draft  [x] Ready for Review
-
 ---
 
 **Instructions:**
 - Edit the title and description above using Vim commands
-- Toggle Draft status: Press <Space> on the Status line
 - Submit: <Ctrl-s> or :w
-- Cancel: <Esc> or :q
+- Cancel: :q
 ```
 
 You can:
@@ -141,6 +132,7 @@ You can:
 - Use **visual mode**, **macros**, and all Vim features
 - **Navigate naturally** with Vim motions
 - **Save with `:w`** or `Ctrl+s` to create the PR
+- The window title shows whether it's a Draft or Ready for Review
 
 ### Commands
 
@@ -159,14 +151,15 @@ You can:
 2. The plugin will automatically check:
    - **Uncommitted changes**: If found, you'll be prompted to commit them
    - **Unpushed branch**: If the branch isn't pushed to remote, you'll be prompted to push it
-3. A beautiful floating window opens with an **inline editable buffer**
-4. Edit the PR directly in Vim with full editing capabilities:
+3. Choose **PR status**: Select "Ready for Review" or "Draft"
+4. A beautiful floating window opens with an **inline editable buffer**
+5. Edit the PR directly in Vim with full editing capabilities:
    - **Title**: Edit in the Title section using all Vim commands
    - **Description**: Write markdown with full syntax highlighting
-   - **Status**: Navigate to the Status line and press `Space` to toggle Draft/Ready
-5. Use all your favorite Vim motions, commands, and keybindings
-6. Press `Ctrl+s` or `:w` to submit the PR
-7. Press `Esc` (in normal mode) or `:q` to cancel
+   - The window title shows your selected status (Draft or Ready for Review)
+6. Use all your favorite Vim motions, commands, and keybindings
+7. Press `Ctrl+s` or `:w` to submit the PR
+8. Press `:q` to cancel (Note: `Esc` only exits insert mode, not the dialog)
 
 **Smart Branch Management**: The plugin automatically handles uncommitted changes and ensures your branch is pushed to remote before creating the PR, eliminating the common "branch not pushed" error.
 
@@ -176,9 +169,8 @@ You can:
 
 - **All Vim commands** - Full Vim editing support (hjkl, w, b, dd, yy, p, etc.)
 - `i/a/o/O` - Enter insert mode (standard Vim)
-- `Space` - Toggle Draft/Ready (when cursor is on Status line)
+- `Esc` - Return to normal mode (standard Vim behavior)
 - `Ctrl+s` or `:w` - Submit PR
-- `Esc` - Return to normal mode / Cancel (in normal mode)
 - `:q` - Quit/Cancel
 
 ### Viewing PRs

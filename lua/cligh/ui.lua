@@ -40,6 +40,35 @@ end
 
 -- Create PR form in a floating window with inline editing
 function M.create_pr_form(callback)
+  -- First, ask for draft status
+  vim.ui.select(
+    { "Ready for Review", "Draft" },
+    { 
+      prompt = "PR Status:",
+      format_item = function(item)
+        if item == "Draft" then
+          return "📝 Draft - Work in progress"
+        else
+          return "✅ Ready for Review - Ready to merge"
+        end
+      end
+    },
+    function(choice)
+      if not choice then
+        vim.notify("PR creation cancelled", vim.log.levels.WARN)
+        return
+      end
+      
+      local is_draft = choice == "Draft"
+      
+      -- Now open the editor
+      M.open_pr_editor(is_draft, callback)
+    end
+  )
+end
+
+-- Open the PR editor buffer
+function M.open_pr_editor(is_draft, callback)
   local config = require('cligh').config
   local width = math.floor(vim.o.columns * (config.ui.width or 0.75))
   local height = math.floor(vim.o.lines * (config.ui.height or 0.75))
@@ -64,6 +93,8 @@ function M.create_pr_form(callback)
     row = row,
     style = 'minimal',
     border = config.ui.border or 'rounded',
+    title = is_draft and " 📝 Create Pull Request (Draft) " or " ✅ Create Pull Request (Ready for Review) ",
+    title_pos = "center",
   }
   
   -- Create window
@@ -73,18 +104,18 @@ function M.create_pr_form(callback)
   
   -- Form state
   local form_state = {
-    draft = false,
+    draft = is_draft,
     buf = buf,
     win = win,
   }
   
   -- Initial template
   local template = {
-    "# Create Pull Request",
+    "# Pull Request",
     "",
     "## Title",
     "",
-    "<!-- Enter your PR title on the line below -->",
+    "<!-- Enter your PR title below -->",
     "",
     "",
     "## Description",
@@ -93,17 +124,16 @@ function M.create_pr_form(callback)
     "",
     "",
     "",
-    "## Settings",
     "",
-    "Status: [ ] Draft  [x] Ready for Review",
+    "",
+    "",
     "",
     "---",
     "",
     "**Instructions:**",
     "- Edit the title and description above using Vim commands",
-    "- Toggle Draft status: Press <Space> on the Status line",
     "- Submit: <Ctrl-s> or :w",
-    "- Cancel: <Esc> or :q",
+    "- Cancel: :q",
   }
   
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, template)
@@ -118,7 +148,6 @@ function M.create_pr_form(callback)
     local desc_lines = {}
     local in_title = false
     local in_desc = false
-    local draft = false
     
     for i, line in ipairs(lines) do
       if line:match("^## Title") then
@@ -127,11 +156,9 @@ function M.create_pr_form(callback)
       elseif line:match("^## Description") then
         in_title = false
         in_desc = true
-      elseif line:match("^## Settings") then
-        in_title = false
-        in_desc = false
-      elseif line:match("^Status:") then
-        draft = line:match("%[x%]%s*Draft")
+      elseif line:match("^%-%-%-") or line:match("^%*%*Instructions:") then
+        -- Stop parsing at the instructions section
+        break
       elseif in_title and not line:match("^<!%-%-") and line ~= "" then
         table.insert(title_lines, line)
       elseif in_desc and not line:match("^<!%-%-") and line ~= "" then
@@ -161,30 +188,8 @@ function M.create_pr_form(callback)
     return {
       title = title,
       body = description,
-      draft = draft or false,
+      draft = form_state.draft,  -- Use the draft status from form_state
     }
-  end
-  
-  -- Toggle draft status
-  local function toggle_draft()
-    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-    for i, line in ipairs(lines) do
-      if line:match("^Status:") then
-        local new_line
-        if line:match("%[x%]%s*Draft") then
-          -- Currently draft, switch to ready
-          new_line = "Status: [ ] Draft  [x] Ready for Review"
-          form_state.draft = false
-        else
-          -- Currently ready, switch to draft
-          new_line = "Status: [x] Draft  [ ] Ready for Review"
-          form_state.draft = true
-        end
-        vim.api.nvim_buf_set_lines(buf, i - 1, i, false, {new_line})
-        vim.notify(form_state.draft and "Set to Draft" or "Set to Ready for Review", vim.log.levels.INFO)
-        break
-      end
-    end
   end
   
   -- Submit handler
@@ -223,18 +228,6 @@ function M.create_pr_form(callback)
     submit()
   end, opts)
   
-  -- Cancel with Esc in normal mode
-  vim.keymap.set('n', '<Esc>', cancel, opts)
-  
-  -- Toggle draft with Space (in normal mode)
-  vim.keymap.set('n', '<Space>', function()
-    local cursor = vim.api.nvim_win_get_cursor(win)
-    local line = vim.api.nvim_buf_get_lines(buf, cursor[1] - 1, cursor[1], false)[1]
-    if line and line:match("^Status:") then
-      toggle_draft()
-    end
-  end, opts)
-  
   -- Prevent actual write, use it as submit
   vim.api.nvim_create_autocmd("BufWriteCmd", {
     buffer = buf,
@@ -270,13 +263,11 @@ function M.create_pr_form(callback)
     vim.cmd([[
       syntax match ClighHeader "^##.*$"
       syntax match ClighComment "^<!--.*-->$"
-      syntax match ClighStatus "^Status:.*$"
       syntax match ClighInstructions "^\*\*Instructions:\*\*$"
       syntax match ClighSeparator "^---$"
       
       highlight default link ClighHeader Title
       highlight default link ClighComment Comment
-      highlight default link ClighStatus Special
       highlight default link ClighInstructions Question
       highlight default link ClighSeparator Comment
     ]])
