@@ -107,6 +107,7 @@ function M.open_pr_editor(is_draft, callback)
     draft = is_draft,
     buf = buf,
     win = win,
+    submitted = false,  -- Track if PR was submitted
   }
   
   -- Initial template
@@ -198,8 +199,11 @@ function M.open_pr_editor(is_draft, callback)
     
     if form_data.title == "" then
       vim.notify("PR title is required!", vim.log.levels.ERROR)
-      return
+      return false
     end
+    
+    -- Mark as submitted
+    form_state.submitted = true
     
     -- Close window
     if vim.api.nvim_win_is_valid(win) then
@@ -208,6 +212,7 @@ function M.open_pr_editor(is_draft, callback)
     
     -- Call callback with form data
     callback(form_data)
+    return true
   end
   
   -- Cancel handler
@@ -231,29 +236,52 @@ function M.open_pr_editor(is_draft, callback)
   -- Prevent actual write, use it as submit
   vim.api.nvim_create_autocmd("BufWriteCmd", {
     buffer = buf,
-    callback = submit,
+    callback = function()
+      submit()
+    end,
   })
   
-  -- Handle quit
+  -- Handle quit - support :q, :wq, :q!
   vim.api.nvim_create_autocmd("QuitPre", {
     buffer = buf,
     callback = function()
-      if vim.api.nvim_win_is_valid(win) then
-        local form_data = parse_form_data()
-        if form_data.title ~= "" or form_data.body ~= "" then
+      if not vim.api.nvim_win_is_valid(win) then
+        return
+      end
+      
+      -- If already submitted (from :w or Ctrl-s), allow quit (supports :wq)
+      if form_state.submitted then
+        return
+      end
+      
+      -- Check if this is a force quit (:q!)
+      local is_force_quit = vim.fn.mode() == 'n' and vim.v.cmdbang == 1
+      
+      if is_force_quit then
+        -- Force quit without saving
+        cancel()
+        return
+      end
+      
+      -- Check if there are changes
+      local form_data = parse_form_data()
+      if form_data.title ~= "" or form_data.body ~= "" then
+        -- Prevent default quit and show prompt
+        vim.schedule(function()
           vim.ui.select(
             { "Save and create PR", "Discard changes" },
             { prompt = "You have unsaved changes:" },
             function(choice)
               if choice == "Save and create PR" then
                 submit()
-              else
+              elseif choice == "Discard changes" then
                 cancel()
               end
             end
           )
-          return true -- Prevent default quit
-        end
+        end)
+        -- Return true to prevent default quit behavior
+        return true
       end
     end,
   })

@@ -20,7 +20,7 @@ A Neovim plugin for GitHub CLI (`gh`) with a beautiful inline editor for creatin
 │ - Fixes Y                                                │
 │                                                          │
 │ ─────────────────────────────────────────────────────── │
-│ <Ctrl-s> Submit | :q Cancel                             │
+│ :wq Submit | :w Submit | :q Cancel | Ctrl-s Submit     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -122,8 +122,8 @@ When you run `:ClighPRCreate`, you first choose the status (Draft or Ready for R
 
 **Instructions:**
 - Edit the title and description above using Vim commands
-- Submit: <Ctrl-s> or :w
-- Cancel: :q
+- Submit: :w or :wq or <Ctrl-s>
+- Cancel: :q or :q!
 ```
 
 You can:
@@ -131,8 +131,9 @@ You can:
 - Write **markdown** with syntax highlighting
 - Use **visual mode**, **macros**, and all Vim features
 - **Navigate naturally** with Vim motions
-- **Save with `:w`** or `Ctrl+s` to create the PR
+- **Save with `:w` or `:wq`** to create the PR (just like a regular file!)
 - The window title shows whether it's a Draft or Ready for Review
+- **`:wq` works perfectly** - submit and close in one command!
 
 ### Commands
 
@@ -158,8 +159,14 @@ You can:
    - **Description**: Write markdown with full syntax highlighting
    - The window title shows your selected status (Draft or Ready for Review)
 6. Use all your favorite Vim motions, commands, and keybindings
-7. Press `Ctrl+s` or `:w` to submit the PR
-8. Press `:q` to cancel (Note: `Esc` only exits insert mode, not the dialog)
+7. Submit the PR:
+   - `:w` - Save and submit PR
+   - `:wq` - Save, submit PR, and close (natural Vim workflow!)
+   - `Ctrl+s` - Quick submit shortcut
+8. Cancel/Quit:
+   - `:q` - Quit (prompts if there are unsaved changes)
+   - `:q!` - Force quit without saving
+   - `Esc` - Only exits insert mode (standard Vim behavior)
 
 **Smart Branch Management**: The plugin automatically handles uncommitted changes and ensures your branch is pushed to remote before creating the PR, eliminating the common "branch not pushed" error.
 
@@ -170,8 +177,11 @@ You can:
 - **All Vim commands** - Full Vim editing support (hjkl, w, b, dd, yy, p, etc.)
 - `i/a/o/O` - Enter insert mode (standard Vim)
 - `Esc` - Return to normal mode (standard Vim behavior)
-- `Ctrl+s` or `:w` - Submit PR
-- `:q` - Quit/Cancel
+- `:w` - Submit PR
+- `:wq` - Submit PR and quit (just like saving a file!)
+- `Ctrl+s` - Quick submit shortcut
+- `:q` - Quit (prompts if unsaved changes)
+- `:q!` - Force quit without saving
 
 ### Viewing PRs
 
